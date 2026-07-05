@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>생일 마방진 트레이너 | 수학 교실</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <style>
+        :root {
+            --primary: #4F46E5; --primary-hover: #4338CA; --secondary: #E0E7FF;
+            --bg: #F3F4F6; --card-bg: #FFFFFF; --text-main: #111827; --text-muted: #6B7280;
+            --border-color: #E5E7EB; --success: #10B981; --success-bg: #D1FAE5;
+            --error: #EF4444; --error-bg: #FEE2E2; --fixed-cell-bg: #F8FAFC;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Pretendard', sans-serif; background-color: var(--bg); color: var(--text-main); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 40px 20px; }
+        .app-container { width: 100%; max-width: 850px; background: var(--card-bg); border-radius: 24px; box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.08), 0 10px 15px -3px rgba(0, 0, 0, 0.04); padding: 50px 60px; text-align: center; position: relative; overflow: hidden; transition: all 0.3s ease; }
+        .app-container::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 8px; background: linear-gradient(90deg, #4F46E5, #EC4899); }
+        h1, h2, h3 { font-weight: 800; letter-spacing: -0.02em; margin-bottom: 12px; }
+        .subtitle { color: var(--text-muted); font-size: 1.1rem; margin-bottom: 30px; }
+        .hidden { display: none !important; }
+
+        .input-group { margin: 20px 0; }
+        input[type="text"], input[type="password"], textarea { width: 100%; padding: 16px 20px; border-radius: 12px; border: 1px solid var(--border-color); font-size: 16px; outline: none; transition: all 0.2s ease; background: #F9FAFB; font-family: inherit; resize: vertical; }
+        input:focus, textarea:focus { border-color: var(--primary); background: var(--card-bg); box-shadow: 0 0 0 4px var(--secondary); }
+        input::placeholder, textarea::placeholder { color: #CBD5E1; opacity: 1; }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+
+        button { background: var(--primary); color: white; border: none; padding: 16px 32px; border-radius: 12px; font-size: 17px; cursor: pointer; font-weight: 700; transition: all 0.2s ease; width: 100%; }
+        button:disabled { background: #D1D5DB; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+        button:hover:not(:disabled) { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3); }
+
+        .modern-date-picker { display: flex; justify-content: center; align-items: center; gap: 12px; margin: 30px 0; }
+        .date-field { display: flex; align-items: center; background: #F9FAFB; border: 1px solid var(--border-color); border-radius: 12px; padding: 4px 16px; transition: 0.2s; }
+        .date-field:focus-within { border-color: var(--primary); box-shadow: 0 0 0 4px var(--secondary); background: var(--card-bg); }
+        .date-field input { width: 80px; border: none; padding: 12px 4px; text-align: center; font-size: 20px; font-weight: 700; color: var(--text-main); background: transparent; }
+        .date-field span { font-weight: 600; color: var(--text-muted); font-size: 16px; }
+        .btn-create { background: var(--text-main); width: auto; margin-left: 8px; }
+
+        .magic-badge { display: inline-flex; align-items: center; background: var(--secondary); color: var(--primary-hover); padding: 12px 24px; border-radius: 100px; font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+        .magic-badge b { font-size: 24px; margin-left: 8px; }
+        
+        /* PDF 인쇄 전용 헤더 라인 (기본 숨김) */
+        #pdf-header-info { display: none; background: #F9FAFB; padding: 10px 20px; border-radius: 12px; font-size: 15px; color: #4B5563; border: 1px solid var(--border-color); margin-bottom: 15px; }
+
+        .magic-grid-wrapper { display: grid; grid-template-columns: 60px repeat(4, 80px) 60px; grid-template-rows: repeat(4, 80px) 60px; gap: 12px; justify-content: center; align-items: center; margin: 40px auto; position: relative; }
+        .cell-input { width: 100%; height: 100%; font-size: 28px; text-align: center; border-radius: 16px; border: 2px solid var(--border-color); outline: none; background: var(--card-bg); font-weight: 800; color: var(--primary); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); transition: all 0.2s; }
+        .cell-input:focus { border-color: var(--primary); transform: scale(1.05); z-index: 10; box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.3); }
+        .cell-fixed { background: var(--fixed-cell-bg) !important; color: var(--text-main); border-color: var(--border-color); }
+        .sum-lbl { font-size: 18px; font-weight: 800; color: #D1D5DB; transition: 0.3s; display: flex; align-items: center; justify-content: center; background: #F3F4F6; border-radius: 12px; height: 100%; width: 100%; }
+        .sum-lbl.ok { background: var(--success-bg); color: var(--success); transform: scale(1.05); }
+        .sum-lbl.err { background: var(--error-bg); color: var(--error); animation: shake 0.4s; }
+        @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-4px); } 50% { transform: translateX(4px); } 75% { transform: translateX(-4px); } 100% { transform: translateX(0); } }
+
+        .result-box { margin: 20px 0; padding: 20px; border-radius: 16px; font-weight: 700; font-size: 1.1rem; }
+        .success { background: var(--success-bg); color: var(--success); border: 1px solid #A7F3D0; }
+        .fail { background: var(--error-bg); color: var(--error); border: 1px solid #FECACA; }
+        
+        .ai-feedback { text-align: left; background: var(--fixed-cell-bg); padding: 30px; border-radius: 20px; border: 1px solid var(--border-color); font-size: 16px; line-height: 1.8; margin-top: 20px; color: var(--text-main); }
+        .ai-feedback p { margin-bottom: 10px; } .ai-feedback p:last-child { margin-bottom: 0; }
+        
+        .number-badge-container { background: #F9FAFB; border: 1px solid var(--border-color); padding: 16px 20px; border-radius: 16px; display: flex; flex-wrap: nowrap; justify-content: flex-start; gap: 8px; min-height: 70px; overflow-x: auto; white-space: nowrap; }
+        .number-badge-container::-webkit-scrollbar { height: 8px; } .number-badge-container::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; } .number-badge-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .number-badge { display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center; background: white; color: var(--text-main); min-width: 38px; height: 38px; border-radius: 10px; font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid var(--border-color); padding: 0 8px; }
+        
+        .number-analysis-box { background: #EFF6FF; border: 1px solid #BFDBFE; border-left: 5px solid #3B82F6; padding: 18px 20px; border-radius: 12px; margin-top: 15px; font-size: 15.5px; line-height: 1.6; color: #1E3A8A; text-align: left; word-break: keep-all; }
+        
+        /* PDF 렌더링용 숨김 텍스트 박스 */
+        #reflection-print { display: none; text-align: left; background: #F9FAFB; padding: 16px 20px; border-radius: 12px; border: 1px solid var(--border-color); font-size: 16px; white-space: pre-wrap; word-break: break-all; margin-bottom: 10px; }
+
+        #action-buttons { display: flex; gap: 12px; margin-top: 20px; }
+        #local-pdf-btn { background: var(--success); } #local-pdf-btn:hover { background: #059669; }
+        .btn-secondary { background: var(--text-muted); } .btn-secondary:hover { background: #4B5563; }
+        .section-title { text-align: left; font-size: 1.1rem; color: var(--text-main); margin-bottom: 12px; margin-top: 35px; }
+
+        /* =========================================
+           [PDF 1페이지 맞춤 극한 압축 모드] 
+           ========================================= */
+        /* [수정] 아래쪽 padding을 최소화하고 요소가 차지하는 높이를 핏하게 조절하여 2페이지 넘김을 방지 */
+        .pdf-exporting { padding: 25px 40px 10px 40px !important; max-width: 750px !important; box-shadow: none !important; min-height: fit-content !important; }
+        .pdf-exporting h2 { font-size: 1.4rem !important; margin-bottom: 5px !important; }
+        
+        /* 1. 서브타이틀 숨김 */
+        .pdf-exporting .subtitle { display: none !important; }
+        /* 2. 기존 입력창 숨기고 요약 한줄 텍스트 표시 */
+        .pdf-exporting .modern-date-picker, .pdf-exporting .magic-badge { display: none !important; }
+        .pdf-exporting #pdf-header-info { display: inline-block !important; margin-top: 10px !important; }
+        
+        /* 3. 마방진 표 크기 약 70%로 축소 */
+        .pdf-exporting .magic-grid-wrapper {
+            grid-template-columns: 42px 56px 56px 56px 56px 42px !important;
+            grid-template-rows: 56px 56px 56px 56px 42px !important;
+            gap: 6px !important; 
+            margin: 20px auto 0 !important;
+        }
+        .pdf-exporting .magic-grid-wrapper::before {
+            content: '';
+            grid-area: 1 / 1 / 5 / 2;
+        }
+        .pdf-exporting .cell-input { font-size: 18px !important; border-radius: 10px !important; transform: none !important; }
+        .pdf-exporting .sum-lbl { font-size: 14px !important; border-radius: 6px !important; transform: none !important; animation: none !important; }
+        .pdf-exporting .sum-lbl.ok { transform: none !important; }
+        .pdf-exporting .sum-lbl.err { transform: none !important; animation: none !important; }
+        
+        .pdf-exporting .section-title { margin-top: 20px !important; margin-bottom: 8px !important; font-size: 1rem !important; }
+        
+        /* 마방진 표와 숫자 모아보기 제목 사이의 여백 40px */
+        .pdf-exporting #validation-result + .section-title { margin-top: 40px !important; }
+        
+        /* 숫자 뱃지 크기 */
+        .pdf-exporting .number-badge-container { padding: 12px !important; min-height: 50px !important; margin-bottom: 0 !important; overflow: visible !important; }
+        .pdf-exporting .number-badge { width: 30px !important; height: 30px !important; font-size: 14px !important; min-width: 30px !important; padding: 0 !important; }
+        
+        .pdf-exporting .number-analysis-box { padding: 12px !important; font-size: 13.5px !important; margin-top: 20px !important; margin-bottom: 0 !important; }
+        
+        /* 4. textarea 숨기고 일반 텍스트 박스로 교체 */
+        .pdf-exporting textarea { display: none !important; }
+        .pdf-exporting #reflection-print { display: block !important; font-size: 14px !important; padding: 12px !important; margin-bottom: 0 !important; }
+        
+        /* 5. 피드백 섹션 여백(margin-top) 20px로 통일 및 하단 여백 완벽 제거 */
+        .pdf-exporting #feedback-section { margin-top: 20px !important; padding-top: 0 !important; border-top: none !important; margin-bottom: 0 !important; padding-bottom: 0 !important; }
+        .pdf-exporting .ai-feedback { padding: 15px !important; font-size: 13.5px !important; margin-bottom: 0 !important; }
+        .pdf-exporting p { margin-bottom: 5px !important; }
+        
+        /* PDF 출력 캡처 순간에 로딩 문구 완전히 숨김 */
+        .pdf-exporting #loading-status { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div id="login-view" style="width: 100%; max-width: 400px; margin: 0 auto;">
+        <h1>나만의 4×4 생일 마방진</h1>
+        <p class="subtitle">세상에서 하나뿐인 나만의 생일 마방진</p>
+        <div style="background: white; padding: 10px;">
+            <div class="input-group"><input type="text" id="id-input" placeholder="학번 (예: 10101)" autofocus></div>
+            <div class="input-group"><input type="text" id="name-input" placeholder="이름 (예: 홍길동)"></div>
+            <div class="input-group"><input type="password" id="pw-input" placeholder="비밀번호"></div>
+            <button onclick="login()" style="margin-top: 10px;">시작하기</button>
+        </div>
+    </div>
+
+    <div id="magic-view" class="hidden">
+        <h2>나만의 4×4 생일 마방진</h2>
+        <p class="subtitle">생년월일을 입력하고 모든 방향의 합이 일치하는 마방진을 완성해보세요.</p>
+        
+        <div id="pdf-header-info"></div>
+
+        <div class="modern-date-picker">
+            <div class="date-field"><input type="number" id="birth-year" placeholder="2010" min="1990" max="2024"><span>년</span></div>
+            <div class="date-field"><input type="number" id="birth-month" placeholder="4" min="1" max="12"><span>월</span></div>
+            <div class="date-field"><input type="number" id="birth-day" placeholder="6" min="1" max="31"><span>일</span></div>
+            <button class="btn-create" id="create-btn" onclick="initMagicSquare()">마방진 생성</button>
+        </div>
+
+        <div id="magic-game-area" class="hidden">
+            <div class="magic-badge">나의 매직 넘버 <b id="magic-num-display">?</b></div>
+
+            <div id="grid-wrapper" class="magic-grid-wrapper"></div>
+            <div id="validation-result" class="result-box hidden"></div>
+            
+            <h4 class="section-title">사용한 숫자 모아보기 (오름차순)</h4>
+            <div id="sorted-numbers" class="number-badge-container">-</div>
+            
+            <div id="number-analysis" class="number-analysis-box hidden"></div>
+
+            <h4 class="section-title">마방진 완성 소감</h4>
+            <textarea id="reflection" rows="3" placeholder="마방진을 만들며 어떤 수학적 원리를 발견했는지, 느낀 점을 자유롭게 적어보세요."></textarea>
+            <div id="reflection-print"></div>
+
+            <button id="submit-btn" onclick="submitMagicSquare()" style="margin-top: 30px;">선생님께 제출 및 AI 피드백 받기</button>
+
+            <div id="feedback-section" class="hidden" style="margin-top: 40px; border-top: 2px dashed var(--border-color); padding-top: 30px;">
+                <p id="loading-status" style="color: var(--primary); font-size: 1.1rem; font-weight: 700;">선생님 AI가 맞춤형 피드백을 작성하고 있습니다...</p>
+                <div id="ai-response" class="ai-feedback hidden"></div>
+                <div id="action-buttons" class="hidden">
+                    <button id="local-pdf-btn" onclick="downloadLocalPDF()">내 마방진 PDF 다운로드</button>
+                    <button onclick="location.reload()" class="btn-secondary">처음으로 돌아가기</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    // 보안을 위해 프론트엔드에서 API 키를 완전히 삭제했습니다. (백엔드에 안전하게 보관됨)
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbztnfY-z4vdzq5XnsIIeYnNKeqAbz9jlchQG33wMBdvRk433fezxa74L0KlB5MzT4JV2Q/exec";
+    
+    let studentData = { id: '', name: '', timeStart: 0 };
+    let magicNumber = 0;
+    let fixedBirthNums = [];
+    let isMagicSquarePerfect = false;
+
+    window.login = async function() {
+        const id = document.getElementById('id-input').value;
+        const name = document.getElementById('name-input').value;
+        const pw = document.getElementById('pw-input').value;
+        
+        if(id && name && pw) { 
+            const loginBtn = document.querySelector('#login-view button');
+            const originalText = loginBtn.innerText;
+            loginBtn.innerText = '확인 중...';
+            loginBtn.disabled = true;
+
+            try {
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'login', studentId: id, name: name, password: pw })
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    studentData.id = id; 
+                    studentData.name = name; 
+                    studentData.timeStart = Date.now();
+                    document.getElementById('login-view').classList.add('hidden');
+                    document.getElementById('magic-view').classList.remove('hidden');
+                    
+                    // 생년월일 화면(2010년도 칸)으로 커서 자동 이동
+                    setTimeout(() => {
+                        document.getElementById('birth-year').focus();
+                    }, 100);
+                    
+                } else {
+                    alert(result.message || '학번, 이름, 비밀번호가 일치하지 않습니다.');
+                }
+            } catch (e) {
+                console.error("로그인 에러:", e);
+                alert('서버와 통신 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+            } finally {
+                loginBtn.innerText = originalText;
+                loginBtn.disabled = false;
+            }
+        } else { 
+            alert('학번, 이름, 비밀번호를 모두 입력해주세요!'); 
+        }
+    };
+
+    window.initMagicSquare = function() {
+        const y = parseInt(document.getElementById('birth-year').value);
+        const m = parseInt(document.getElementById('birth-month').value);
+        const d = parseInt(document.getElementById('birth-day').value);
+
+        if(!y || !m || !d || y < 1900 || m < 1 || m > 12 || d < 1 || d > 31) {
+            alert("생년월일을 올바르게 입력해주세요. (예: 2010, 4, 6)"); return;
+        }
+        
+        const y1 = Math.floor(y/100); const y2 = y%100;
+        fixedBirthNums = [y1, y2, m, d];
+        magicNumber = fixedBirthNums.reduce((a,b) => a+b, 0);
+        
+        document.getElementById('magic-num-display').innerText = magicNumber;
+        document.getElementById('magic-game-area').classList.remove('hidden');
+        
+        document.getElementById('birth-year').disabled = true;
+        document.getElementById('birth-month').disabled = true;
+        document.getElementById('birth-day').disabled = true;
+        document.getElementById('create-btn').classList.add('hidden');
+
+        const wrapper = document.getElementById('grid-wrapper');
+        wrapper.innerHTML = '';
+        
+        for(let r=0; r<4; r++) {
+            for(let c=0; c<4; c++) {
+                const idx = r * 4 + c;
+                const input = document.createElement('input');
+                input.type = 'number'; input.className = 'cell-input'; input.dataset.idx = idx; input.style.gridArea = `${r+1} / ${c+2}`; 
+                
+                if(idx < 4) { input.value = fixedBirthNums[idx]; input.disabled = true; input.classList.add('cell-fixed'); }
+                input.oninput = updateMagicSquare; wrapper.appendChild(input);
+            }
+            const rSum = document.createElement('div'); rSum.id = 'sum-r' + r; rSum.className = 'sum-lbl'; rSum.style.gridArea = `${r+1} / 6`; wrapper.appendChild(rSum);
+            const cSum = document.createElement('div'); cSum.id = 'sum-c' + r; cSum.className = 'sum-lbl'; cSum.style.gridArea = `5 / ${r+2}`; wrapper.appendChild(cSum);
+        }
+
+        const d1Sum = document.createElement('div'); d1Sum.id = 'sum-d1'; d1Sum.className = 'sum-lbl'; d1Sum.style.gridArea = `5 / 6`; wrapper.appendChild(d1Sum);
+        const d2Sum = document.createElement('div'); d2Sum.id = 'sum-d2'; d2Sum.className = 'sum-lbl'; d2Sum.style.gridArea = `5 / 1`; wrapper.appendChild(d2Sum);
+        
+        updateMagicSquare();
+        
+        // 마방진 표에서 첫 번째 입력 가능한 칸(2행 1열, 데이터 인덱스 4)으로 커서 자동 이동
+        setTimeout(() => {
+            const firstEditableCell = document.querySelector('.cell-input[data-idx="4"]');
+            if(firstEditableCell) firstEditableCell.focus();
+        }, 100);
+    };
+
+    function generateNumberFeedback(nums, fixedNums, allCorrect) {
+        let feedbackStr = "💡 <b>마방진 분석:</b><br>";
+        if (allCorrect) {
+            feedbackStr += "<span style='color: var(--success); font-weight: 700;'>가로, 세로, 대각선의 합이 모두 매직 넘버와 일치하네요! 완벽하게 마방진의 원리를 이해했어요. 최고예요! 👏</span><br>";
+        } else {
+            feedbackStr += "<span style='color: var(--error); font-weight: 700;'>앗! 가로, 세로, 대각선의 합이 매직 넘버와 다른 곳이 있어요. 마방진은 모든 방향의 네 숫자의 합이 같아야 한답니다. 빨간색으로 표시된 곳의 계산을 다시 확인해 보세요! 💪</span><br>";
+        }
+
+        let uniqueNums = new Set(nums); let fixedUnique = new Set(fixedNums);
+        feedbackStr += "<br>📊 <b>숫자 구성:</b> ";
+        if (uniqueNums.size === 16) {
+            feedbackStr += "중복되는 숫자 없이 서로 다른 수 16개를 모두 사용했네요. 아주 훌륭합니다!";
+        } else if (fixedUnique.size < 4) {
+            feedbackStr += "생년월일에 이미 같은 숫자가 있군요. 중복된 숫자를 활용해 칸을 잘 채워나갔어요.";
+        } else {
+            feedbackStr += "일부 숫자가 중복되었지만, 요리조리 조합하며 치열하게 고민한 흔적이 보입니다!";
+        }
+        return feedbackStr;
+    }
+
+    window.updateMagicSquare = function() {
+        const inputs = document.querySelectorAll('.cell-input');
+        const nums = Array.from(inputs).map(inp => parseInt(inp.value));
+
+        const setSumLabel = (id, values) => {
+            const el = document.getElementById(id);
+            if(values.some(isNaN)) { el.innerText = ''; el.className = 'sum-lbl'; return false; }
+            const sum = values.reduce((a,b) => a+b, 0);
+            el.innerText = sum;
+            if(sum === magicNumber) { el.className = 'sum-lbl ok'; return true; } 
+            else { el.className = 'sum-lbl err'; return false; }
+        };
+
+        let allCorrect = true; let filledCount = 0;
+        for(let i=0; i<4; i++) {
+            const rVals = [nums[i*4], nums[i*4+1], nums[i*4+2], nums[i*4+3]];
+            if(!setSumLabel('sum-r'+i, rVals)) allCorrect = false;
+            filledCount += rVals.filter(n => !isNaN(n)).length;
+            const cVals = [nums[i], nums[i+4], nums[i+8], nums[i+12]];
+            if(!setSumLabel('sum-c'+i, cVals)) allCorrect = false;
+        }
+
+        if(!setSumLabel('sum-d1', [nums[0], nums[5], nums[10], nums[15]])) allCorrect = false;
+        if(!setSumLabel('sum-d2', [nums[3], nums[6], nums[9], nums[12]])) allCorrect = false;
+
+        isMagicSquarePerfect = allCorrect;
+
+        const validNums = nums.filter(n => !isNaN(n)).sort((a,b) => a-b);
+        document.getElementById('sorted-numbers').innerHTML = validNums.length > 0 ? validNums.map(n => `<span class="number-badge">${n}</span>`).join('') : '-';
+
+        const resBox = document.getElementById('validation-result');
+        const analysisBox = document.getElementById('number-analysis');
+        
+        if(filledCount === 16) {
+            analysisBox.classList.remove('hidden');
+            analysisBox.innerHTML = generateNumberFeedback(nums, fixedBirthNums, allCorrect);
+            resBox.classList.add('hidden');
+        } else {
+            resBox.classList.add('hidden'); analysisBox.classList.add('hidden');
+        }
+    };
+
+    function preparePdfLayout() {
+        const element = document.querySelector('.app-container');
+        const actionButtons = document.getElementById('action-buttons');
+        
+        element.classList.add('pdf-exporting');
+        actionButtons.classList.add('hidden');
+        
+        const originalDisplay = document.body.style.display;
+        const originalOverflow = element.style.overflow;
+        window.scrollTo(0, 0); 
+        document.body.style.display = 'block'; 
+        element.style.overflow = 'visible';    
+        element.style.margin = '0 auto';
+        
+        const textarea = document.getElementById('reflection');
+        const reflectionPrint = document.getElementById('reflection-print');
+        reflectionPrint.innerText = textarea.value;
+        
+        const y = document.getElementById('birth-year').value;
+        const m = document.getElementById('birth-month').value;
+        const d = document.getElementById('birth-day').value;
+        document.getElementById('pdf-header-info').innerHTML = `<b>학번:</b> ${studentData.id} &nbsp;&nbsp;|&nbsp;&nbsp; <b>이름:</b> ${studentData.name} &nbsp;&nbsp;|&nbsp;&nbsp; <b>생년월일:</b> ${y}년 ${m}월 ${d}일 &nbsp;&nbsp;|&nbsp;&nbsp; <b>나의 매직 넘버:</b> ${magicNumber}`;
+        
+        return { element, originalDisplay, originalOverflow, actionButtons };
+    }
+
+    function restorePdfLayout({ element, originalDisplay, originalOverflow, actionButtons }) {
+        document.body.style.display = originalDisplay;
+        element.style.overflow = originalOverflow;
+        element.classList.remove('pdf-exporting');
+        actionButtons.classList.remove('hidden');
+    }
+
+    // 제출 시 1. 백엔드로 AI 피드백 요청 -> 2. 화면에 표시 -> 3. PDF 저장 순서로 동작합니다.
+    window.submitMagicSquare = async function() {
+        const reflection = document.getElementById('reflection').value;
+        const inputs = document.querySelectorAll('.cell-input');
+        const nums = Array.from(inputs).map(inp => parseInt(inp.value));
+        const filledCount = nums.filter(n => !isNaN(n)).length;
+        
+        if (filledCount < 16) return alert('16칸을 모두 채운 후에 제출해주세요!');
+        if (!reflection.trim()) return alert('소감을 입력해주세요.');
+
+        document.getElementById('submit-btn').classList.add('hidden');
+        document.getElementById('feedback-section').classList.remove('hidden');
+        document.getElementById('loading-status').innerText = "선생님 AI가 맞춤형 피드백을 작성하고 있습니다...";
+
+        try {
+            const uniqueNumbers = new Set(nums);
+            const hasDuplicates = uniqueNumbers.size !== 16;
+
+            // 1. 백엔드로 AI 피드백 생성 요청 (안전한 API 키 사용)
+            const response = await fetch(GAS_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({
+                    action: 'getFeedback',
+                    reflection: reflection,
+                    isSuccess: isMagicSquarePerfect,
+                    hasDuplicates: hasDuplicates
+                })
+            });
+            const result = await response.json();
+            
+            // AI가 보내준 문장에서 괄호 '('와 ')'를 모두 깨끗하게 제거합니다.
+            let feedbackText = result.feedback;
+            if(feedbackText) {
+                feedbackText = feedbackText.replace(/[()]/g, '');
+            }
+            
+            // 2. 화면에 생성된 피드백 표시
+            const aiResponseDiv = document.getElementById('ai-response');
+            aiResponseDiv.innerHTML = marked.parse(feedbackText);
+            aiResponseDiv.classList.remove('hidden');
+            
+            document.getElementById('loading-status').innerText = "리포트를 예쁘게 디자인하여 구글 드라이브에 저장 중입니다... (잠시 대기)";
+            document.getElementById('loading-status').style.color = "var(--primary)";
+            
+            // 3. PDF 촬영 및 서버 전체 데이터 저장
+            await saveToServer(feedbackText, reflection);
+
+            document.getElementById('loading-status').classList.add('hidden');
+            document.getElementById('action-buttons').classList.remove('hidden');
+
+        } catch (error) {
+            document.getElementById('loading-status').innerText = "서버 오류가 발생했습니다. 아래 버튼으로 수동 다운로드를 해주세요.";
+            document.getElementById('loading-status').style.color = "var(--error)";
+            document.getElementById('action-buttons').classList.remove('hidden');
+        }
+    };
+
+    async function saveToServer(feedbackText, reflection) {
+        try {
+            const layoutState = preparePdfLayout();
+            
+            // [수정] margin 배열 순서는 [top, left, bottom, right] 입니다. bottom을 0으로 줘서 2쪽 넘김 현상 차단.
+            const opt = {
+                margin:       [10, 10, 0, 10],
+                filename:     `temp.pdf`,
+                image:        { type: 'jpeg', quality: 1 },
+                html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#F3F4F6', scrollY: 0 },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            
+            let pdfBase64 = "";
+            try {
+                const pdfDataUri = await html2pdf().set(opt).from(layoutState.element).outputPdf('datauristring');
+                pdfBase64 = pdfDataUri.split(',')[1];
+            } catch (err) {
+                console.error("Base64 변환 실패", err);
+            }
+            
+            restorePdfLayout(layoutState);
+
+            const inputs = document.querySelectorAll('.cell-input');
+            const cells = Array.from(inputs).map(c => parseInt(c.value) || 0);
+            const matrix = [ cells.slice(0, 4), cells.slice(4, 8), cells.slice(8, 12), cells.slice(12, 16) ];
+            const uniqueNumbers = new Set(cells);
+            
+            const requestData = {
+                action: 'submitRecord',
+                studentId: studentData.id,
+                name: studentData.name,
+                birthDate: `${document.getElementById('birth-year').value}-${document.getElementById('birth-month').value}-${document.getElementById('birth-day').value}`,
+                magicNumber: magicNumber,
+                isSuccess: isMagicSquarePerfect ? '성공' : '실패',
+                hasDuplicates: uniqueNumbers.size !== 16,
+                allNumbers: cells.sort((a,b) => a-b),
+                timeTaken: Math.floor((Date.now() - studentData.timeStart) / 1000),
+                matrix: matrix,
+                aiFeedback: feedbackText,
+                reflection: reflection,
+                pdfBase64: pdfBase64 
+            };
+
+            await fetch(GAS_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(requestData)
+            });
+        } catch(e) {
+            console.error("서버 저장 실패", e);
+            throw e;
+        }
+    }
+
+    window.downloadLocalPDF = function() {
+        const layoutState = preparePdfLayout();
+        
+        // [수정] 수동 다운로드 옵션에서도 하단 여백을 0으로 차단합니다.
+        const opt = {
+            margin:       [10, 10, 0, 10], 
+            filename:     `생일마방진_리포트_${studentData.name || '학생'}.pdf`,
+            image:        { type: 'jpeg', quality: 1 },
+            html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#F3F4F6', scrollY: 0 },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        
+        html2pdf().set(opt).from(layoutState.element).save().then(() => {
+            restorePdfLayout(layoutState);
+        });
+    };
+</script>
+</body>
+</html>
