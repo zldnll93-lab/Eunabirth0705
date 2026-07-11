@@ -270,7 +270,7 @@
                 const input = document.createElement('input');
                 input.type = 'number'; input.className = 'cell-input'; input.dataset.idx = idx; input.style.gridArea = `${r+1} / ${c+2}`; 
                 
-                if(idx < 4) { input.value = fixedBirthNums[idx]; input.disabled = true; input.classList.add('cell-fixed'); }
+                if(idx < 4) { input.value = fixedBirthNums[idx]; }
                 input.oninput = updateMagicSquare; wrapper.appendChild(input);
             }
             const rSum = document.createElement('div'); rSum.id = 'sum-r' + r; rSum.className = 'sum-lbl'; rSum.style.gridArea = `${r+1} / 6`; wrapper.appendChild(rSum);
@@ -446,7 +446,7 @@
         try {
             const layoutState = preparePdfLayout();
             
-            // margin 배열 순서는 [top, left, bottom, right] 입니다. bottom을 0으로 줘서 2쪽 넘김 현상 차단.
+            // [수정] margin 배열 순서는 [top, left, bottom, right] 입니다. bottom을 0으로 줘서 2쪽 넘김 현상 차단.
             const opt = {
                 margin:       [10, 10, 0, 10],
                 filename:     `temp.pdf`,
@@ -476,7 +476,7 @@
                 name: studentData.name,
                 birthDate: `${document.getElementById('birth-year').value}-${document.getElementById('birth-month').value}-${document.getElementById('birth-day').value}`,
                 magicNumber: magicNumber,
-                isSuccess: isMagicSquarePerfect, // [수정 완료] 이제 불리언 값으로 백엔드와 완벽하게 연결됩니다!
+                isSuccess: isMagicSquarePerfect ? '성공' : '실패',
                 hasDuplicates: uniqueNumbers.size !== 16,
                 allNumbers: cells.sort((a,b) => a-b),
                 timeTaken: Math.floor((Date.now() - studentData.timeStart) / 1000),
@@ -500,7 +500,7 @@
     window.downloadLocalPDF = function() {
         const layoutState = preparePdfLayout();
         
-        // 수동 다운로드 옵션에서도 하단 여백을 0으로 차단합니다.
+        // [수정] 수동 다운로드 옵션에서도 하단 여백을 0으로 차단합니다.
         const opt = {
             margin:       [10, 10, 0, 10], 
             filename:     `생일마방진_리포트_${studentData.name || '학생'}.pdf`,
